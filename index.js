@@ -344,7 +344,7 @@ async function start() {
             if (type == "text")
                 dataElem.innerText = data;
             else if (type == "info") {
-                footerElem.innerText += data == "joined" ? " joind" : " exit"
+                footerElem.innerText += data == "joined" ? " joined" : " exit"
                 elem.style.border = "none"
                 elem.style.padding = 0
                 elem.style.margin = "3px 20px"
