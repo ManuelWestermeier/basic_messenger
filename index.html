@@ -47,6 +47,10 @@
 
     </form>
 
+    <script defer>
+        document.querySelector("form").action = document.location.protocol == "https:" ? "room" : "room.html"
+    </script>
+
 </body>
 
 </html>
