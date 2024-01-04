@@ -6,9 +6,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MW Chatt</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        form {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100dvh;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        input,
+        button {
+            padding: 10px;
+            border: 2px solid var(--a);
+            border-radius: 5px;
+            margin: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        button:hover,
+        input:focus {
+            cursor: pointer;
+            background-color: var(--a);
+            color: var(--c);
+        }
+    </style>
 </head>
 
 <body>
+
+    <form action="room" method="get">
+
+        <input name="room" type="text" placeholder="room...">
+
+        <button type="submit">
+            join room
+        </button>
+
+    </form>
 
 </body>
 
