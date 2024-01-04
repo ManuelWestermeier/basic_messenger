@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MW Chatt</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="index.js" defer></script>
+</head>
+
+<body>
+    <button style="position: fixed;top: 0;left: 10px;font-size: 10px;cursor: pointer;" onclick="API.say('delete chatt')">
+        Delete Chatt
+    </button>
+    <section id="messages">
+        <button class="loading-spinner">Loading....</button>
+    </section>
+    <section id="send-form">
+        <form>
+            <textarea placeholder="Text..." value=""></textarea>
+            <button type="submit" title="send">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                    <path
+                        d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z" />
+                </svg>
+            </button>
+        </form>
+    </section>
+</body>
+
+</html>
