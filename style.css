@@ -19,9 +19,6 @@
 html {
     scroll-behavior: smooth;
     overflow: hidden;
-    background-image: url("logo.jpg");
-    background-size: 100vmax;
-    background-position: center;
 }
 
 :focus {
@@ -54,6 +51,10 @@ html {
     height: calc(100dvh - 80px);
     overflow-y: auto;
     padding: 10px;
+    
+    background-image: url("logo.jpg");
+    background-size: 100vmin;
+    background-position: center;
 }
 
 #messages .msg {
