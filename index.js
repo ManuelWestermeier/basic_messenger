@@ -299,7 +299,6 @@ API.onSay("incoming message", msg => {
     if (msg.type == "delete") {
         if (document.getElementById(msg.id))
             messagesDiv.removeChild(document.getElementById(msg.id))
-        messages = messages.filter(_msg => _msg.id != msg.id)
         return;
     }
 
