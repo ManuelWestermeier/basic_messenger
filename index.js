@@ -453,6 +453,7 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
         if (!confirm("Do you want to change the name???")) return
         contacts[user] = prompt("new name :")
         localStorage.setItem(":messenger-contacts:", JSON.stringify(contacts))
+        window.location.reload()
     }
 
     //to delete on dbclick
