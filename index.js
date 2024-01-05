@@ -461,25 +461,25 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     }
 
     //to change Th name
-    footerElem.onclick = e => {
+    footerElem.addEventListener("click", e => {
         e.preventDefault()
         if (!confirm("Do you want to change the name???")) return
         contacts[user] = prompt("new name :")
         localStorage.setItem(":messenger-contacts:", JSON.stringify(contacts))
         window.location.reload()
-    }
+    })
 
     //to delete on dbclick
-    deleteMsgButton.onclick = async e => {
+    deleteMsgButton.addEventListener("click", async e => {
         e.preventDefault()
         if (user != _user) return
         if (!confirm("Delete Message")) return
         if (!(await API.get("delete message", id))) window.location.reload();
-    }
+    })
 
     messagesDiv.appendChild(elem)
 
-    //if (i == messages.length - 1)
+    //scroll messages into view
     if (canScrollToNewMsg)
         elem.scrollIntoView({ behavior: "smooth", block: "center" })
 
