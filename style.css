@@ -19,6 +19,9 @@
 html {
     scroll-behavior: smooth;
     overflow: hidden;
+    background-image: url("logo.jpg");
+    background-size: 100vmax;
+    background-position: center;
 }
 
 :focus {
