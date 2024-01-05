@@ -40,6 +40,16 @@
             color: var(--c);
         }
 
+        #rooms {
+            background-color: var(--b);
+            padding: 5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
         #rooms a {
             padding: 5px;
             border-radius: 5px;
@@ -90,21 +100,23 @@
 
                 roomElem.draggable = true
 
+                roomElem.dataset.room = room
+
                 roomElem.ondragend = e => {
                     e.preventDefault()
-                    if (!confirm("delete " + room)) return;
-                    delete rooms[room]
+                    log(roomElem)
+                    if (!confirm("delete " + e.target.dataset.room)) return;
+                    delete rooms[e.target.dataset.room]
                     localStorage.setItem("messenger-rooms-visited", JSON.stringify(rooms))
                     render()
                 }
 
                 roomElem.onfocus = e => {
                     e.preventDefault()
-                    roomElem.innerText = room + " swipe to remove"
+                    e.target.innerText = e.target.dataset.room + " swipe to remove"
                 }
 
                 roomsElem.appendChild(roomElem)
-                roomsElem.appendChild(document.createElement("br"))
             }
         }
     </script>
