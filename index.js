@@ -225,7 +225,7 @@ sendTextarea.value = localStorage.getItem("messenger-room-value-" + url.searchPa
 
 sendTextarea.addEventListener("input", e => localStorage.setItem("messenger-room-value-" + url.searchParams.get("room"), e.target.value))
 
-var API = new Client(true ? "ws://localhost:2112" : "wss://wfrx3h-2112.csb.app")
+var API = new Client(false ? "ws://localhost:2112" : "wss://wfrx3h-2112.csb.app")
 API.onclose = () => window.location.reload()
 API.onerror = () => window.location.reload()
 
