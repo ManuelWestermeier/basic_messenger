@@ -13,6 +13,7 @@
     outline: none;
     color: var(--c);
     background-color: var(--b);
+    word-break: break-all;
 }
 
 html {
@@ -62,9 +63,29 @@ html {
     position: relative;
 }
 
+.msg-anim {
+    animation: goInMsg 0.5s ease-in-out;
+}
+
+@keyframes goInMsg {
+    0% {
+        opacity: 0.3;
+        transform: translateY(-10px);
+    }
+}
+
+.msg-iframe {
+    width: 100%;
+    height: auto;
+    border: none;
+    border-radius: 5px;
+    overflow: auto;
+}
+
 .msg-footer {
     cursor: pointer;
     font-size: 10px;
+    width: max-content;
 }
 
 #messages .mymsg {
@@ -99,13 +120,15 @@ html {
     overflow-y: auto;
 }
 
-#send-form form button {
+#send-form form button,
+#send-form form select {
     width: 60px;
     height: 60px;
     transition: all 0.3s ease-in-out;
 }
 
-#send-form form button:hover {
+#send-form form button:hover,
+#send-form form select:hover {
     cursor: pointer;
     background-color: var(--a);
 }

@@ -214,6 +214,7 @@ contacts[user] = "You"
 const messagesDiv = document.getElementById("messages")
 const sendForm = document.querySelector("#send-form form")
 const sendTextarea = document.querySelector("#send-form form textarea")
+const sendType = document.getElementById("send-type")
 sendForm.onsubmit = e => e.preventDefault()
 
 var messages = []
@@ -258,21 +259,27 @@ API.onopen = async () => {
 
 }
 
-window.addEventListener("focusin", e => {
-    sendTextarea.focus()
-})
+window.addEventListener("focusin", e => sendTextarea.focus())
 
 async function start() {
 
-    const room = url.searchParams.get("room")
-
     renderChatt();
+
+    const room = url.searchParams.get("room")
 
     API.say("join", room)
 
     API.onSay("incoming message", msg => {
 
+        if (msg.type == "delete") {
+            if (document.getElementById(msg.id))
+                messagesDiv.removeChild(document.getElementById(msg.id))
+            messages = messages.filter(_msg => _msg.id != msg.id)
+            return;
+        }
+
         messages.push(msg);
+
         renderChatt();
 
     })
@@ -304,13 +311,16 @@ async function start() {
         if (sendTextarea.value == "") return
         //creating the message
         var msg = {
-            type: "text",
+            type: sendType.value,
             data: sendTextarea.value,
             date: new Date().toLocaleString(),
-            user
+            user,
         }
         //pushing the message
-        messages.push(msg)
+        messages.push({
+            ...msg,
+            id: randomBytes(8),
+        })
         renderChatt()
         if (API.getState() == 1) sendTextarea.value = "";
         API.say("send message", msg)
@@ -318,55 +328,148 @@ async function start() {
 
     }
 
+    API.onSay("totalreload", () => window.location.reload())
+
     function renderChatt() {
 
+        //clear the message div
         messagesDiv.innerHTML = "";
-        var _user = user
 
-        messages.map(({ type, data, user, date }, i) => {
-            //create message element
-            var elem = document.createElement("div")
-            elem.classList.add("msg")
-            var dataElem = document.createElement("div")
-            var footerElem = document.createElement("div")
-            elem.appendChild(dataElem)
-            elem.appendChild(footerElem)
-
-            footerElem.title = "click to change name"
-            footerElem.classList.add("msg-footer")
-
-            if (user == _user)
-                elem.classList.add("mymsg")
-
-            footerElem.innerText =
-                `${contacts?.[user] ?? user} ${date}`
-
-            if (type == "text")
-                dataElem.innerText = data;
-            else if (type == "info") {
-                footerElem.innerText += data == "joined" ? " joined" : " exit"
-                elem.style.border = "none"
-                elem.style.padding = 0
-                elem.style.margin = "3px 20px"
-            }
-            else if (type == "active user") {
-                dataElem.innerText = "active user : \n-" + data.map(id => contacts[id] ?? id).join("\n-");
-                elem.style.width = "calc(100% - 35px)"
-            }
-
-            footerElem.addEventListener("click", e => {
-                e.preventDefault()
-                if (!confirm("Do you want to change the name???")) return
-                contacts[user] = prompt("new name :")
-                localStorage.setItem(":messenger-contacts:", JSON.stringify(contacts))
-                renderChatt()
-            })
-
-            messagesDiv.appendChild(elem)
-            if (i == messages.length - 1)
-                elem.scrollIntoView({ behavior: "smooth", block: "center" })
-        })
+        messages.map(renderMessage)
 
     }
 
+}
+
+var _user = user
+const RenderedMessages = {}
+var canScrollToNewMsg = true
+messagesDiv.addEventListener("scroll", e => {
+    canScrollToNewMsg = messagesDiv.scrollHeight - innerHeight < e.target.scrollTop + innerHeight / 2
+})
+
+var renderMessage = ({ type, data, user, date, id }, i) => {
+
+    //create message element
+    var elem = document.createElement("div")
+    elem.setAttribute("id", id)
+    elem.classList.add("msg")
+    var dataElem = document.createElement("div")
+    var footerElem = document.createElement("div")
+    elem.appendChild(dataElem)
+    elem.appendChild(footerElem)
+
+    elem.ondblclick = async e => {
+        e.preventDefault()
+        if (!confirm("Delete Message")) return
+        if (user != _user) return
+        if (!(await API.get("delete message", id))) window.location.reload();
+        log("delete " + id)
+    }
+
+    if (!RenderedMessages?.[id])
+        elem.classList.add("msg-anim")
+
+    footerElem.title = "click to change name"
+    footerElem.classList.add("msg-footer")
+
+    if (user == _user)
+        elem.classList.add("mymsg")
+
+    footerElem.innerText =
+        `${contacts?.[user] ?? user} ${date}`
+
+    if (type == "text")
+        dataElem.innerText = data;
+    else if (type == "link") {
+        var data = isUrl(data)
+        if (!data) return
+        var link = document.createElement("a")
+        link.href = data;
+        link.innerText = link;
+        link.target = "_blank"
+        dataElem.appendChild(link)
+    } else if (type == "iframe") {
+        try {
+            var data = isUrl(data)
+            if (!data) return
+            var iframe = document.createElement("iframe")
+            iframe.classList.add("msg-iframe")
+            iframe.src = data;
+            dataElem.appendChild(iframe);
+        } catch (error) {
+
+        }
+    } else if (type == "html") {
+        try {
+            var iframe = document.createElement("iframe")
+            iframe.classList.add("msg-iframe")
+            var data = data
+                .split("<script").join("< script")
+                .split("</script").join("< /script")
+            var data =
+                `<style>*{
+            background-color: #e9f3ea;
+            color: black;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }</style>
+        <script>
+        window.alert=x=>log(x)
+        window.prompt=x=>log(x)
+        window.confirm=x=>log(x)
+        </script>`
+                + data;
+
+            var blob = new Blob([data], { type: "text/html" })
+            var fr = new FileReader()
+
+            fr.onload = () => {
+                iframe.src = fr.result;
+            }
+
+            fr.readAsDataURL(blob)
+            dataElem.appendChild(iframe);
+        } catch (error) {
+
+        }
+    }
+    else if (type == "info") {
+        footerElem.innerText += data == "joined" ? " joined" : " exit"
+        elem.style.border = "none"
+        elem.style.padding = 0
+        elem.style.margin = "3px 20px"
+    }
+    else if (type == "active user") {
+        dataElem.innerText = "active user : \n-" + data.map(id => contacts[id] ?? id).join("\n-");
+        elem.style.width = "calc(100% - 35px)"
+        elem.removeChild(footerElem)
+    }
+
+    footerElem.onclick = e => {
+        e.preventDefault()
+        if (!confirm("Do you want to change the name???")) return
+        contacts[user] = prompt("new name :")
+        localStorage.setItem(":messenger-contacts:", JSON.stringify(contacts))
+        renderChatt()
+    }
+
+    messagesDiv.appendChild(elem)
+    if (i == messages.length - 1)
+        if (canScrollToNewMsg)
+            elem.scrollIntoView({ behavior: "smooth", block: "center" })
+    RenderedMessages[id] = true
+}
+
+function isUrl(text) {
+    try {
+        var url = new URL(text)
+        return url
+    } catch (error) {
+        try {
+            var url = new URL("https://" + text)
+            return url
+        } catch (error) {
+            return false
+        }
+    }
 }
