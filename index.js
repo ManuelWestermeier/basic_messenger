@@ -225,7 +225,7 @@ sendTextarea.value = localStorage.getItem("messenger-room-value-" + url.searchPa
 
 sendTextarea.addEventListener("input", e => localStorage.setItem("messenger-room-value-" + url.searchParams.get("room"), e.target.value))
 
-var API = new Client(document.location.protocol == "file:" ? "ws://localhost:2112" : "wss://wfrx3h-2112.csb.app")
+var API = new Client(true ? "ws://localhost:2112" : "wss://wfrx3h-2112.csb.app")
 API.onclose = () => window.location.reload()
 API.onerror = () => window.location.reload()
 
@@ -371,7 +371,7 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     elem.appendChild(dataElem)
     elem.appendChild(footerElem)
 
-    
+
     //to change The name
     footerElem.addEventListener("click", e => {
         e.preventDefault()
@@ -381,23 +381,19 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
         window.location.reload()
     })
 
-    //to delete on dbclick
-    deleteMsgButton.addEventListener("click", async e => {
-        e.preventDefault()
-        if (user != _user) return
-        if (!confirm("Delete Message")) return
-        if (!(await API.get("delete message", id))) window.location.reload();
-    })
-
-    log(deleteMsgButton)
-    log(footerElem)
-
     if (user == _user) {
         //render menu
         var deleteMsgButton = document.createElement("div")
         deleteMsgButton.classList.add("menu")
         deleteMsgButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`
         elem.appendChild(deleteMsgButton)
+        //to delete on dbclick
+        deleteMsgButton.addEventListener("click", async e => {
+            e.preventDefault()
+            if (user != _user) return
+            if (!confirm("Delete Message")) return
+            if (!(await API.get("delete message", id))) window.location.reload();
+        })
         //chage color of my message
         elem.classList.add("mymsg")
     }
