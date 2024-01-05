@@ -439,8 +439,10 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     else if (type == "info") {
         footerElem.innerText += data == "joined" ? " joined" : " exit"
         elem.style.border = "none"
-        elem.style.padding = 0
-        elem.style.margin = "3px 20px"
+        elem.style.padding = "5px"
+        elem.style.borderRadius = "5px"
+        elem.style.margin = "1px 20px"
+        elem.style.width = "max-content"
     }
     else if (type == "active user") {
         dataElem.innerText = "active user : \n-" + data.map(id => contacts[id] ?? id).join("\n-");
