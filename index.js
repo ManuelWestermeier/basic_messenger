@@ -398,10 +398,10 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
         })
         //chage color of my message
         elem.classList.add("mymsg")
+        //remove dlete button on other messagetypes
+        if (type == "info" || type == "active user")
+            elem.removeChild(deleteMsgButton)
     }
-
-    if (type == "info" || type == "active user")
-        elem.removeChild(deleteMsgButton)
 
     if (!RenderedMessages[id])
         elem.classList.add("msg-anim")
