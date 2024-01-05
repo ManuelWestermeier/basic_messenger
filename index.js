@@ -372,7 +372,7 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     elem.appendChild(footerElem)
 
     
-    //to change Th name
+    //to change The name
     footerElem.addEventListener("click", e => {
         e.preventDefault()
         if (!confirm("Do you want to change the name???")) return
@@ -388,6 +388,9 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
         if (!confirm("Delete Message")) return
         if (!(await API.get("delete message", id))) window.location.reload();
     })
+
+    log(deleteMsgButton)
+    log(footerElem)
 
     if (user == _user) {
         //render menu
