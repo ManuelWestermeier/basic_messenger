@@ -459,8 +459,8 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     //to delete on dbclick
     elem.ondblclick = async e => {
         e.preventDefault()
-        if (!confirm("Delete Message")) return
         if (user != _user) return
+        if (!confirm("Delete Message")) return
         if (!(await API.get("delete message", id))) window.location.reload();
     }
 
