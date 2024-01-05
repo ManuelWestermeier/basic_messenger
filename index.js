@@ -221,6 +221,10 @@ const url = new URL(document.location)
 if (!url.searchParams.get("room"))
     window.history.back();
 
+sendTextarea.value = localStorage.getItem("messenger-room-value-" + url.searchParams.get("room")) || ""
+
+sendTextarea.addEventListener("input", e => localStorage.setItem("messenger-room-value-" + url.searchParams.get("room"), e.target.value))
+
 var API = new Client(document.location.protocol == "file:" ? "ws://localhost:2112" : "wss://wfrx3h-2112.csb.app")
 API.onclose = () => window.location.reload()
 API.onerror = () => window.location.reload()
@@ -367,13 +371,14 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     elem.appendChild(dataElem)
     elem.appendChild(footerElem)
 
-    var _menu = document.createElement("div")
-    _menu.classList.add("menu")
-    _menu.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z"/></svg>`
-    elem.appendChild(_menu)
+    //render menu
+    var deleteMsgButton = document.createElement("div")
+    deleteMsgButton.classList.add("menu")
+    deleteMsgButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`
+    elem.appendChild(deleteMsgButton)
 
     if (type == "info" || type == "active user")
-        elem.removeChild(_menu)
+        elem.removeChild(deleteMsgButton)
 
     if (!RenderedMessages[id])
         elem.classList.add("msg-anim")
@@ -455,6 +460,7 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
         elem.removeChild(footerElem)
     }
 
+    //to change Th name
     footerElem.onclick = e => {
         e.preventDefault()
         if (!confirm("Do you want to change the name???")) return
@@ -464,7 +470,7 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     }
 
     //to delete on dbclick
-    elem.ondblclick = async e => {
+    deleteMsgButton.onclick = async e => {
         e.preventDefault()
         if (user != _user) return
         if (!confirm("Delete Message")) return
