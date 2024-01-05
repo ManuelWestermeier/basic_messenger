@@ -16,10 +16,12 @@
             height: 100dvh;
             flex-direction: column;
             gap: 5px;
-            
+
             background-image: url("logo.jpg");
             background-size: 100vmin;
             background-position: center;
+
+            overflow-y: auto;
         }
 
         input,
@@ -37,6 +39,11 @@
             background-color: var(--a);
             color: var(--c);
         }
+
+        #rooms a {
+            padding: 5px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 
@@ -50,13 +57,57 @@
             join room
         </button>
 
+        <div id="rooms"></div>
+
     </form>
 
-    <script defer>
-        document.querySelector("form").action = document.location.protocol == "https:" ? "room" : "room.html"
-    </script>
 
-    <script></script>
+    <script defer>
+        var log = console.log
+        var roomsElem = document.getElementById("rooms")
+
+        var roomPath = document.location.protocol == "https:" ? "room" : "room.html"
+
+        document.querySelector("form").action = roomPath;
+        var rooms = JSON.parse(localStorage.getItem("messenger-rooms-visited") ?? "{}")
+
+        render()
+
+        function render() {
+            roomsElem.innerHTML = ""
+            for (room in rooms) {
+                var roomElem = document.createElement("a")
+
+                var url = new URL(document.location.origin +
+                    document.location.pathname
+                    + roomPath)
+
+                url.searchParams.set("room", room)
+
+                roomElem.href = url
+
+                roomElem.innerText = room
+
+                roomElem.draggable = true
+
+                roomElem.ondragend = e => {
+                    e.preventDefault()
+                    if (!confirm("delete " + room)) return;
+                    delete rooms[room]
+                    localStorage.setItem("messenger-rooms-visited", JSON.stringify(rooms))
+                    render()
+                }
+
+                roomElem.onfocus = e => {
+                    e.preventDefault()
+                    roomElem.innerText = room + " swipe to remove"
+                }
+
+                roomsElem.appendChild(roomElem)
+                roomsElem.appendChild(document.createElement("br"))
+            }
+        }
+    </script>
 
 </body>
 
