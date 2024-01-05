@@ -371,6 +371,24 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     elem.appendChild(dataElem)
     elem.appendChild(footerElem)
 
+    
+    //to change Th name
+    footerElem.addEventListener("click", e => {
+        e.preventDefault()
+        if (!confirm("Do you want to change the name???")) return
+        contacts[user] = prompt("new name :")
+        localStorage.setItem(":messenger-contacts:", JSON.stringify(contacts))
+        window.location.reload()
+    })
+
+    //to delete on dbclick
+    deleteMsgButton.addEventListener("click", async e => {
+        e.preventDefault()
+        if (user != _user) return
+        if (!confirm("Delete Message")) return
+        if (!(await API.get("delete message", id))) window.location.reload();
+    })
+
     if (user == _user) {
         //render menu
         var deleteMsgButton = document.createElement("div")
@@ -459,23 +477,6 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
         elem.style.width = "calc(100% - 35px)"
         elem.removeChild(footerElem)
     }
-
-    //to change Th name
-    footerElem.addEventListener("click", e => {
-        e.preventDefault()
-        if (!confirm("Do you want to change the name???")) return
-        contacts[user] = prompt("new name :")
-        localStorage.setItem(":messenger-contacts:", JSON.stringify(contacts))
-        window.location.reload()
-    })
-
-    //to delete on dbclick
-    deleteMsgButton.addEventListener("click", async e => {
-        e.preventDefault()
-        if (user != _user) return
-        if (!confirm("Delete Message")) return
-        if (!(await API.get("delete message", id))) window.location.reload();
-    })
 
     messagesDiv.appendChild(elem)
 
