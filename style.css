@@ -140,6 +140,7 @@ html {
     resize: none;
     height: auto;
     padding: 10px;
+    border-radius: 5px;
     overflow-y: auto;
 }
 
