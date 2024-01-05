@@ -268,6 +268,11 @@ async function start() {
     //To Join the right room
     API.say("join", room)
 
+    localStorage.setItem("messenger-rooms-visited", JSON.stringify({
+        ...(JSON.parse(localStorage.getItem("messenger-rooms-visited") ?? "{}")),
+        [room]: room
+    }))
+
     //Sending Message on Submit
     sendForm.onsubmit = e => {
 
