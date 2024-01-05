@@ -209,7 +209,6 @@ class Client {
 var user = localStorage.getItem("messenger-user") || false;
 var password = localStorage.getItem("messenger-password") || false;
 var contacts = JSON.parse(localStorage.getItem(":messenger-contacts:")) || {}
-contacts[user] = "You"
 
 const messagesDiv = document.getElementById("messages")
 const sendForm = document.querySelector("#send-form form")
@@ -217,7 +216,6 @@ const sendTextarea = document.querySelector("#send-form form textarea")
 const sendType = document.getElementById("send-type")
 sendForm.onsubmit = e => e.preventDefault()
 
-var messages = []
 const url = new URL(document.location)
 
 if (!url.searchParams.get("room"))
@@ -241,6 +239,8 @@ API.onopen = async () => {
 
     if (await API.get("auth", { user, password })) {
 
+        contacts[user] = "You"
+
         start()
 
     }
@@ -263,35 +263,12 @@ window.addEventListener("focusin", e => sendTextarea.focus())
 
 async function start() {
 
-    renderChatt();
-
     const room = url.searchParams.get("room")
 
+    //To Join the right room
     API.say("join", room)
 
-    API.onSay("incoming message", msg => {
-
-        if (msg.type == "delete") {
-            if (document.getElementById(msg.id))
-                messagesDiv.removeChild(document.getElementById(msg.id))
-            messages = messages.filter(_msg => _msg.id != msg.id)
-            return;
-        }
-
-        messages.push(msg);
-
-        renderChatt();
-
-    })
-
-    API.onSay("reload", () => reloadChatt())
-
-    function reloadChatt() {
-        messages = []
-        renderChatt()
-    }
-
-    //Sending Messages
+    //Sending Message on Submit
     sendForm.onsubmit = e => {
 
         e.preventDefault()
@@ -299,50 +276,75 @@ async function start() {
 
     }
 
+    //Sendin Message on Keydown
     window.addEventListener("keydown", ({ key }) => {
         if (key.toLowerCase() == "escape")
             sendMessage()
         sendTextarea.focus()
     })
 
+}
 
-    function sendMessage() {
+API.onSay("incoming message", msg => {
 
-        if (sendTextarea.value == "") return
-        //creating the message
-        var msg = {
-            type: sendType.value,
-            data: sendTextarea.value,
-            date: new Date().toLocaleString(),
-            user,
-        }
-        //pushing the message
-        messages.push({
-            ...msg,
-            id: randomBytes(8),
-        })
-        renderChatt()
-        if (API.getState() == 1) sendTextarea.value = "";
-        API.say("send message", msg)
-        log("send : " + sendTextarea.value)
-
+    if (msg.type == "delete") {
+        if (document.getElementById(msg.id))
+            messagesDiv.removeChild(document.getElementById(msg.id))
+        messages = messages.filter(_msg => _msg.id != msg.id)
+        return;
     }
 
-    API.onSay("totalreload", () => window.location.reload())
+    renderChatt(msg);
 
-    function renderChatt() {
+})
 
-        //clear the message div
+API.onSay("reload", () => reloadChatt())
+
+API.onSay("totalreload", () => window.location.reload())
+
+function reloadChatt() {
+    messagesDiv.innerHTML = ""
+}
+
+function sendMessage() {
+
+    if (sendTextarea.value == "") return
+    //creating the message
+    var msg = {
+        type: sendType.value,
+        data: sendTextarea.value,
+        date: new Date().toLocaleString(),
+        user,
+    }
+    //pushing the message
+    renderChatt({
+        ...msg,
+        id: randomBytes(8),
+    })
+    if (API.getState() == 1) sendTextarea.value = "";
+    API.say("send message", msg)
+    log("send : " + sendTextarea.value)
+
+}
+
+var isFirstRender = true
+
+function renderChatt(msg) {
+
+    //clear the message div
+    if (isFirstRender) {
         messagesDiv.innerHTML = "";
-
-        messages.map(renderMessage)
-
+        isFirstRender = false
     }
+
+    renderMessage(msg)
+
+    //messages.map(renderMessage)
 
 }
 
 var _user = user
-const RenderedMessages = {}
+var RenderedMessages = {}
 var canScrollToNewMsg = true
 messagesDiv.addEventListener("scroll", e => {
     canScrollToNewMsg = messagesDiv.scrollHeight - innerHeight < e.target.scrollTop + innerHeight / 2
@@ -354,20 +356,21 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
     var elem = document.createElement("div")
     elem.setAttribute("id", id)
     elem.classList.add("msg")
+
     var dataElem = document.createElement("div")
     var footerElem = document.createElement("div")
     elem.appendChild(dataElem)
     elem.appendChild(footerElem)
 
-    elem.ondblclick = async e => {
-        e.preventDefault()
-        if (!confirm("Delete Message")) return
-        if (user != _user) return
-        if (!(await API.get("delete message", id))) window.location.reload();
-        log("delete " + id)
-    }
+    var _menu = document.createElement("div")
+    _menu.classList.add("menu")
+    _menu.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z"/></svg>`
+    elem.appendChild(_menu)
 
-    if (!RenderedMessages?.[id])
+    if (type == "info" || type == "active user")
+        elem.removeChild(_menu)
+
+    if (!RenderedMessages[id])
         elem.classList.add("msg-anim")
 
     footerElem.title = "click to change name"
@@ -450,13 +453,22 @@ var renderMessage = ({ type, data, user, date, id }, i) => {
         if (!confirm("Do you want to change the name???")) return
         contacts[user] = prompt("new name :")
         localStorage.setItem(":messenger-contacts:", JSON.stringify(contacts))
-        renderChatt()
+    }
+
+    //to delete on dbclick
+    elem.ondblclick = async e => {
+        e.preventDefault()
+        if (!confirm("Delete Message")) return
+        if (user != _user) return
+        if (!(await API.get("delete message", id))) window.location.reload();
     }
 
     messagesDiv.appendChild(elem)
-    if (i == messages.length - 1)
-        if (canScrollToNewMsg)
-            elem.scrollIntoView({ behavior: "smooth", block: "center" })
+
+    //if (i == messages.length - 1)
+    if (canScrollToNewMsg)
+        elem.scrollIntoView({ behavior: "smooth", block: "center" })
+
     RenderedMessages[id] = true
 }
 
