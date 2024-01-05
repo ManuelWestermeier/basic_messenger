@@ -11,9 +11,7 @@ function store(path, data) {
     if (!fs.existsSync(_path.dirname(path)))
       fs.mkdirSync(_path.dirname(path), { recursive: true });
     return fs.writeFileSync(path, JSON.stringify(data), "utf-8");
-  } catch (error) {
-
-  }
+  } catch (error) {}
 }
 
 function deleteData(path) {
@@ -27,9 +25,7 @@ function get(path) {
     if (fs.existsSync("data/" + path + ".data"))
       return JSON.parse(fs.readFileSync("data/" + path + ".data", "utf-8"));
     else return false;
-  } catch (error) {
-
-  }
+  } catch (error) {}
 }
 
 const rooms = {};
@@ -50,23 +46,22 @@ createServer({ port: 2112 }, async (client) => {
           rooms[room][userKey][userIdKey].say("reload");
         });
       });
-    } catch (error) {
-
-    }
+    } catch (error) {}
   });
 
   client.onGet("CreateUser", () => createUser());
 
   client.onSay("join", (client_room) => {
     try {
-      room = client_room;
+      if (!client_room) return;
+      room = client_room.split("/").join("\\");
 
       if (!isAuth || !user) return;
       if (!rooms?.[room]) rooms[room] = { [user]: { [id]: client } };
       else if (!rooms[room]?.[user]) rooms[room][user] = { [id]: client };
       else if (rooms[room][user]) rooms[room][user][id] = client;
 
-      var chattData = get("chats/" + client_room);
+      var chattData = get("chats/" + room);
 
       client.say("incoming message", {
         type: "active user",
@@ -76,8 +71,7 @@ createServer({ port: 2112 }, async (client) => {
         id: randomBytes(8).toString("base64url"),
       });
 
-      if (!chattData)
-        store("chats/" + client_room, []);
+      if (!chattData) store("chats/" + room, []);
       else chattData.forEach((msg) => client.say("incoming message", msg));
 
       Object.keys(rooms[room]).forEach((userKey) => {
@@ -93,9 +87,7 @@ createServer({ port: 2112 }, async (client) => {
           });
         });
       });
-    } catch (error) {
-
-    }
+    } catch (error) {}
   });
 
   client.onGet("auth", (data) => {
@@ -103,17 +95,15 @@ createServer({ port: 2112 }, async (client) => {
       isAuth = auth(data);
       if (isAuth) user = data?.user;
       return isAuth;
-    } catch (error) {
+    } catch (error) {}
+  });
 
-    }
-  })
-
-  client.onGet("delete message", id => {
+  client.onGet("delete message", (id) => {
     try {
-      if (!id) return false
+      if (!id) return false;
       if (!isAuth || !user || !room) return false;
-      var data = get("chats/" + room)
-      var data2 = data.filter(msg => !(msg.id == id && msg.user == user))
+      var data = get("chats/" + room);
+      var data2 = data.filter((msg) => !(msg.id == id && msg.user == user));
       if (data.length == data2.length) return false;
       Object.keys(rooms[room]).forEach((userKey) => {
         Object.keys(rooms[room][userKey]).forEach((userIdKey) => {
@@ -126,11 +116,9 @@ createServer({ port: 2112 }, async (client) => {
         });
       });
       store("chats/" + room, data2);
-      return true
-    } catch (error) {
-
-    }
-  })
+      return true;
+    } catch (error) {}
+  });
 
   client.onSay("send message", (data) => {
     try {
@@ -150,10 +138,11 @@ createServer({ port: 2112 }, async (client) => {
           rooms[room][userKey][userIdKey].say("incoming message", msg);
         });
       });
-      store("chats/" + room, [...get("chats/" + room).filter((x, i) => i < 500), msg]);
-    } catch (error) {
-
-    }
+      store("chats/" + room, [
+        ...get("chats/" + room).filter((x, i) => i < 500),
+        msg,
+      ]);
+    } catch (error) {}
   });
 
   client.onclose = () => close();
@@ -179,12 +168,11 @@ createServer({ port: 2112 }, async (client) => {
             });
           });
         });
-    } catch (error) {
-
-    }
+    } catch (error) {}
   }
 });
 
+//for authenticating the user
 function auth(data) {
   try {
     if (!data?.user || !data?.password) return false;
@@ -192,11 +180,10 @@ function auth(data) {
     if (!userData) return false;
     if (userData?.password == data?.password) return true;
     else return false;
-  } catch (error) {
-
-  }
+  } catch (error) {}
 }
 
+//for creating the user
 function createUser() {
   try {
     const user = randomBytes(10).toString("base64url");
@@ -210,27 +197,45 @@ function createUser() {
       user,
       password,
     };
-  } catch (error) {
-
-  }
+  } catch (error) {}
 }
 
 process.on("uncaughtException", (err) => console.error(err));
 
 setInterval(() => {
-
   try {
-    Object.keys(rooms).forEach(room => {
+    Object.keys(rooms).forEach((room) => {
       Object.keys(rooms[room]).forEach((userKey) => {
         Object.keys(rooms[room][userKey]).forEach((userIdKey) => {
           if (!(rooms[room][userKey][userIdKey] instanceof Client)) return;
           rooms[room][userKey][userIdKey].say("totalreload");
         });
       });
-      delete rooms[room]
-    })
-  } catch (error) {
+      delete rooms[room];
+    });
+  } catch (error) {}
+}, 24000 * 3600);
 
-  }
+/*
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-}, 24000 * 3600)
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyD9N0Vq0Z5xuxmuKjsNsiXyy1Y1Gtuda_4",
+  authDomain: "mwbasicmessenger.firebaseapp.com",
+  projectId: "mwbasicmessenger",
+  storageBucket: "mwbasicmessenger.appspot.com",
+  messagingSenderId: "497205588437",
+  appId: "1:497205588437:web:cbd4c284026ebe45c78d5c",
+  measurementId: "G-6N1DW591JE"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+*/

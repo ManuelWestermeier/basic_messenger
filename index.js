@@ -318,6 +318,8 @@ function reloadChatt() {
 function sendMessage() {
 
     if (sendTextarea.value == "") return
+    //reseting the localstorage text
+    localStorage.setItem("messenger-room-value-" + url.searchParams.get("room"), "")
     //creating the message
     var msg = {
         type: sendType.value,
