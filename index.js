@@ -233,7 +233,7 @@ API.onopen = async () => {
 
     if (!user || !password) {
 
-        var data = await API.get("CreateUser")
+        var data = await API.get("CreateUser", prompt("Your name (nobody can see):"))
         user = data.user;
         password = data.password;
         localStorage.setItem("messenger-user", user)

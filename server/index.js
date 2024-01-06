@@ -49,7 +49,7 @@ createServer({ port: 2112 }, async (client) => {
     } catch (error) {}
   });
 
-  client.onGet("CreateUser", () => createUser());
+  client.onGet("CreateUser", (name) => createUser(name ?? ""));
 
   client.onSay("join", (client_room) => {
     try {
@@ -117,7 +117,9 @@ createServer({ port: 2112 }, async (client) => {
       });
       store("chats/" + room, data2);
       return true;
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   });
 
   client.onSay("send message", (data) => {
@@ -184,13 +186,14 @@ function auth(data) {
 }
 
 //for creating the user
-function createUser() {
+function createUser(name) {
   try {
     const user = randomBytes(10).toString("base64url");
     const password = randomBytes(30).toString("base64url");
 
     store("user/" + user, {
       password,
+      name,
     });
 
     return {
